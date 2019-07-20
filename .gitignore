@@ -1,0 +1,73 @@
+# バイナリファイル
+/bin/
+/build/
+/out/
+/tmp/
+
+# 結果ファイルを置くフォルダ
+/result/
+
+# java
+*.class
+*.jar
+*.war
+*.ear
+
+# idea
+*.idea
+.idea
+
+# eclipse
+.metadata
+.gradle
+*.tmp
+*.bak
+*.swp
+*.nib
+local.properties
+.settings/
+.loadpath
+.classpath
+.project
+*.launch
+.buildpath
+/target/
+.target
+
+# windows
+*.DS_Store
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+
+# linux
+*~
+.directory
+
+# OSx
+.AppleDouble
+.LSOverride
+._*
+
+# external disk
+.Spotlight-V100
+.Trashes
+.sonar
+
+# log
+*.log
+*.lck
+*.swp
+*.audit
+
+# output files
+*.csv
+*.png
+*.iml
+*.audit
