@@ -50,6 +50,8 @@ public class EnergyPlusObjectives {
 
     private int numberOfVariables = 20;    // 5:00～24:00を1時間毎に変更する．変数長は20
     private int VARIABLE_LENGTH_MAX = 25;    // 0:00～24:00を1時間毎に変更する．変数長最大値
+    private final static double SETPOINT_TEMPERATURE_MIN = 18.0;
+    private final static double SETPOINT_TEMPERATURE_MAX = 30.0;
 
     // Todo: variableのインスタンス化と保持
     private Matrix result;
@@ -131,8 +133,8 @@ public class EnergyPlusObjectives {
         Matrix allData = new Matrix(result);
         int[] rowsOfElectricEnergy = Cast.doubleToInt( new Vector(evaluationStartTimeForEnergy, 1, evaluationEndTimeForEnergy).get() );
         Matrix electricEnergyData = allData.getSubMatrix(rowsOfElectricEnergy, columnsOfElectricEnergy);    // 電力データすべてを抽出
-        Vector allEnergyData = electricEnergyData.sum(Matrix.DIRECTION_COLUMN); // 各時刻で全ての電力項目を足し合わせる
-        return BuildingUtils.calculatePeakPower(allEnergyData, 1/timestepsPerHour);	// ピーク消費電力[kW]
+        Vector allEnergyData = electricEnergyData.sum(Matrix.DIRECTION_ROW); // 各時刻で全ての電力項目を足し合わせる
+        return BuildingUtils.calculatePeakPower(allEnergyData, 1.0/timestepsPerHour);	// ピーク消費電力[kW]
     }
 
     /**
@@ -144,7 +146,7 @@ public class EnergyPlusObjectives {
         Matrix allData = new Matrix(result);
         int[] rowsOfPMV = Cast.doubleToInt( new Vector(evaluationStartTimeForComfortLevel, 1, evaluationEndTimeForComfortLevel).get() );
         Matrix pmvData = allData.getSubMatrix(rowsOfPMV, columnsOfPMV);
-        return Math.abs(pmvData.mean());	//PMVの平均値の絶対値
+        return pmvData.mean();	//PMVの平均値の絶対値
     }
 
     /**
@@ -197,7 +199,7 @@ public class EnergyPlusObjectives {
         for (int i=1; i<temperature.length; i++) {
             // もし差分が±2以上なら2以内に収める
             double diff = temperature[i] - temperature[i-1];
-            diff = Numeric.limit(diff, 2, -2);
+            diff = Numeric.limit(diff, 2.0, -2.0);
             temperature[i] = temperature[i-1]+diff;
         }
 
@@ -220,13 +222,13 @@ public class EnergyPlusObjectives {
         Vector temperature = new Vector(length, initialValue);
 
         // 初期設定温度
-        double firstValue = Numeric.round(variable[0]*12+18, 0.1);  // 初期設定温度 0～1*12+18->18～30に変換．0.1℃刻みで丸める．
-        temperature.set(offset, Numeric.limit( firstValue,30,18) );	//
+        double firstValue = Numeric.round(variable[0]*(SETPOINT_TEMPERATURE_MAX-SETPOINT_TEMPERATURE_MIN)+SETPOINT_TEMPERATURE_MIN, 0.1);  // 初期設定温度 0～1*12+18->18～30に変換．0.1℃刻みで丸める．
+        temperature.set(offset, Numeric.limit( firstValue,SETPOINT_TEMPERATURE_MAX, SETPOINT_TEMPERATURE_MIN) );	//
 
         // 残りの設定温度
         for(int v=1; v<variable.length; v++){
             double temp = Numeric.round(temperature.get( (offset+v)-1 ) + (variable[v]*4-2), 0.1);		//前回時刻温度±2℃の範囲で変化
-            temperature.set( (offset+v), Numeric.limit(temp, 30, 18));
+            temperature.set( (offset+v), Numeric.limit(temp, SETPOINT_TEMPERATURE_MAX, SETPOINT_TEMPERATURE_MIN));
         }
 
         // 残りは最終値を保持
@@ -258,8 +260,8 @@ public class EnergyPlusObjectives {
 
         // 設定温度
         for(int v=0; v<variable.length; v++){
-            double temp = Numeric.round(variable[v]*12+18, 0.1);		//variableを0～1⇒18～30℃に変換．0.1℃刻みで丸める
-            temperature.set(v+offset, Numeric.limit(temp, 30, 18));    // 18～30℃に制限する
+            double temp = Numeric.round(variable[v]*(SETPOINT_TEMPERATURE_MAX-SETPOINT_TEMPERATURE_MIN)+SETPOINT_TEMPERATURE_MIN, 0.1);		//variableを0～1⇒18～30℃に変換．0.1℃刻みで丸める
+            temperature.set(v+offset, Numeric.limit(temp, SETPOINT_TEMPERATURE_MAX, SETPOINT_TEMPERATURE_MIN));    // 18～30℃に制限する
         }
 
         // 残りは最終値を保持
@@ -292,11 +294,11 @@ public class EnergyPlusObjectives {
         // 長さ lengthの配列を用意
         Vector variable = new Vector(length);
         // 初期変数を計算
-        variable.set(0, Numeric.limit((temp.get(offset)-18)/12, 1, 0));	//初期設定温度 (18~30-18)/12 -> 0~1
+        variable.set(0, Numeric.limit((temp.get(offset)-SETPOINT_TEMPERATURE_MIN)/(SETPOINT_TEMPERATURE_MAX-SETPOINT_TEMPERATURE_MIN), 1.0, 0.0));	//初期設定温度 (18~30-18)/12 -> 0~1
         // 残りの変数を計算
         for(int v=1; v<length; v++){
             double value = temp.get(v+offset) - temp.get(v+offset-1);
-            variable.set(v, Numeric.limit((value+2)/4, 1, 0));				//前回時刻温度±2℃の範囲で変化
+            variable.set(v, Numeric.limit((value+2)/4, 1.0, 0.0));				//前回時刻温度±2℃の範囲で変化
         }
 
         return variable.get();
@@ -317,7 +319,7 @@ public class EnergyPlusObjectives {
         // 変数を計算
         for(int v=0; v<length; v++){
             double temp = temperature[v+offset];
-            variable.set(v, Numeric.limit((temp+2)/4, 1, 0));				// 設定温度をそのまま変数0～1に変換
+            variable.set(v, Numeric.limit((temp+2)/4, 1.0, 0.0));				// 設定温度をそのまま変数0～1に変換
         }
 
         return variable.get();
