@@ -66,6 +66,7 @@ public class EnergyPlusObjectives {
     {
         result = new Matrix(data);
     }
+
     /**
      * constructor.
      * @param variable 変数
@@ -74,7 +75,16 @@ public class EnergyPlusObjectives {
     {
         executeEnergyPlusSimulation(variable, true);
     }
-
+    /**
+     * constructor.
+     * @param variable 変数
+     * @param xmlFile xmlのファイル名
+     */
+    public EnergyPlusObjectives(double[] variable, String xmlFile)
+    {
+        energyPlusConfigFile = xmlFile;
+        executeEnergyPlusSimulation(variable, true);
+    }
     /**
      * constructor.
      * @param variable 変数
@@ -84,7 +94,16 @@ public class EnergyPlusObjectives {
     {
         executeEnergyPlusSimulation(variable, usingDifference);
     }
-
+    /**
+     * constructor.
+     * @param variable 変数
+     * @param usingDifference 設計変数を設定温度に変換するときに差分とするか
+     */
+    public EnergyPlusObjectives(double[] variable, boolean usingDifference, String xmlFile)
+    {
+        energyPlusConfigFile = xmlFile;
+        executeEnergyPlusSimulation(variable, usingDifference);
+    }
     /**
      * 目的関数を計算します<br>
      * @param variable 変数
