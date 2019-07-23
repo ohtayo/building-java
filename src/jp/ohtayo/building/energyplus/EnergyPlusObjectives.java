@@ -30,10 +30,10 @@ public class EnergyPlusObjectives {
     private int hoursInOneDay = 24;
     private int timestepsPerHour = 6;
     private int evaluationStartTimeForComfortLevel = 7*timestepsPerHour-1;	//7:00
-    private int evaluationEndTimeForComfortLevel = 22*timestepsPerHour-1;	//22:00
+    private int evaluationEndTimeForComfortLevel = 21*timestepsPerHour-1;	//21:00
     private int evaluationStartTimeForEnergy = 0;	//0:10
     private int evaluationEndTimeForEnergy = 24*timestepsPerHour-1;		//24:00
-    private int evaluationStartTimeForTemperatureSetting = 5*timestepsPerHour;	//0:10
+    private int evaluationStartTimeForTemperatureSetting = 6*timestepsPerHour;	//6:00
     private int evaluationEndTimeForTemperatureSetting = 24*timestepsPerHour-1;		//24:00
     /*
     private static int groundPMVColumnNumber		= 10;
@@ -48,7 +48,7 @@ public class EnergyPlusObjectives {
     private int[] columnsOfElectricEnergy = {13};
     private int[] columnsOfTemperatureSetting = {3};
 
-    private int numberOfVariables = 20;    // 5:00～24:00を1時間毎に変更する．変数長は20
+    private int numberOfVariables = 19;    // 6:00～24:00を1時間毎に変更する．変数長は20
     private int VARIABLE_LENGTH_MAX = 25;    // 0:00～24:00を1時間毎に変更する．変数長最大値
     private final static double SETPOINT_TEMPERATURE_MIN = 18.0;
     private final static double SETPOINT_TEMPERATURE_MAX = 30.0;
@@ -157,15 +157,34 @@ public class EnergyPlusObjectives {
     }
 
     /**
+     * 結果データからPMVのデータを抽出して出力する
+     * @return 評価対象のPMVデータ
+     */
+    public double[][] getPMVData(){
+        Matrix allData = new Matrix(result);
+        int[] rowsOfPMV = Cast.doubleToInt( new Vector(evaluationStartTimeForComfortLevel, 1, evaluationEndTimeForComfortLevel).get() );
+        return allData.getSubMatrix(rowsOfPMV, columnsOfPMV).get();
+    }
+    /**
      * 1日の平均PMVを算出する
      * @return 1日の平均PMV値
      */
     public double calculateAveragePMV()
     {
-        Matrix allData = new Matrix(result);
-        int[] rowsOfPMV = Cast.doubleToInt( new Vector(evaluationStartTimeForComfortLevel, 1, evaluationEndTimeForComfortLevel).get() );
-        Matrix pmvData = allData.getSubMatrix(rowsOfPMV, columnsOfPMV);
-        return pmvData.mean();	//PMVの平均値の絶対値
+        return new Matrix(getPMVData()).mean();	//PMVの平均値
+    }
+
+    /**
+     * 1日の最大・最小PMVを算出する
+     * @return [0]: 1日の最小PMV, [1]: 最大PMV
+     */
+    public double[] calculatePeakPMV()
+    {
+        Matrix pmvData = new Matrix(getPMVData());
+        double[] peakPMV = new double[2];
+        peakPMV[0] = pmvData.min();
+        peakPMV[1] = pmvData.max();
+        return peakPMV;	//PMVの最大値
     }
 
     /**
@@ -174,9 +193,7 @@ public class EnergyPlusObjectives {
      */
     public double countConstraintExceededTimesOfPMV()
     {
-        Matrix allData = new Matrix(result);
-        int[] rowsOfPMV = Cast.doubleToInt( new Vector(evaluationStartTimeForComfortLevel, 1, evaluationEndTimeForComfortLevel).get() );
-        Matrix pmvData = allData.getSubMatrix(rowsOfPMV, columnsOfPMV);
+        Matrix pmvData = new Matrix(getPMVData());
         return pmvData.abs().round().sum();	//PMVが±0.5を超過した回数
     }
 

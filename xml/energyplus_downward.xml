@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>comment</comment>
+<!-- EnergyPlusのexeのあるフォルダ名 -->
+<entry key="exeFolder">C:\EnergyPlusV8-5-0\</entry>
+
+<!-- EnergyPlusのepwのファイル名名 -->
+<entry key="weatherFile">JPN_36303333_TOKYO_EA_downward_0715_0821.epw</entry>
+
+<!-- EnergyPlusの作業フォルダの親フォルダ名 -->
+<entry key="idfBaseFolder">C:\workspace\energyplus\</entry>
+
+<!-- idfのファイル名 -->
+<entry key="idfFile">zeb_guidline_mid_7floor_20180306.expidf</entry>
+
+</properties>
