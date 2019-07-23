@@ -260,11 +260,11 @@ public class ControlEnergyPlus {
 	/**
 	 * epwファイルのある1日の外気温を別の1日の外気温に書き換える<br>
 	 * 本関数の呼び出し前にepwファイルをバックアップしておくこと<br>
-	 * @param epwFile epwファイルのパス
 	 * @param base 書き換え元の気温のある日
 	 * @param target 書き換え先の日
 	 */
-	public void rewriteEPWFile(String epwFile, Calendar base, Calendar target) {
+	public void rewriteEPWFile( Calendar base, Calendar target) {
+		String epwFile = weatherFolder+weatherFile;
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
 		System.out.println(sdf.format(base.getTime())+"の気温を"+sdf.format(target.getTime())+"に入れ替えます．");
 
