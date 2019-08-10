@@ -6,7 +6,7 @@ import jp.ohtayo.commons.math.Vector;
 /**
  * sample class for simulation using EnergyPlus.
  *
- * @author ohtayo <ohta.yoshihiro@outlook.jp>
+ * @author ohtayo (ohta.yoshihiro@outlook.jp)
  */
 public class BuildingSample
 {
