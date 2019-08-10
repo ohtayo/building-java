@@ -12,7 +12,7 @@ import java.util.Calendar;
 /**
  * EnergyPlusのモデルによる最適化計算の目的関数算出クラスです．
  *
- * @author ohtayo <ohta.yoshihiro@outlook.jp>
+ * @author ohtayo (ohta.yoshihiro@outlook.jp)
  */
 public class EnergyPlusObjectives {
 
@@ -52,6 +52,10 @@ public class EnergyPlusObjectives {
     private int VARIABLE_LENGTH_MAX = 25;    // 0:00～24:00を1時間毎に変更する．変数長最大値
     private final static double SETPOINT_TEMPERATURE_MIN = 18.0;
     private final static double SETPOINT_TEMPERATURE_MAX = 30.0;
+
+    private final static double BASIC_POWER_RATE_UNIT = 1684.8;
+    private final static double POWER_RATE_UNIT_SUMMER = 17.22;
+    private final static double POWER_FACTOR = 0.9;
 
     // Todo: variableのインスタンス化と保持
     private Matrix result;
@@ -98,6 +102,7 @@ public class EnergyPlusObjectives {
      * constructor.
      * @param variable 変数
      * @param usingDifference 設計変数を設定温度に変換するときに差分とするか
+     * @param xmlFile ConfigEnergyPlusのconfigファイル名
      */
     public EnergyPlusObjectives(double[] variable, boolean usingDifference, String xmlFile)
     {
@@ -132,16 +137,23 @@ public class EnergyPlusObjectives {
         result = new Matrix(resultData);
     }
 
+  /**
+   * 結果データから電力データを抽出して出力する
+   * @return EnergyPlus計算結果のうち電力に関するデータ
+   */
+  public double[][] getElectricEnergyData(){
+      Matrix allData = new Matrix(result);
+      int[] rowsOfElectricEnergy = Cast.doubleToInt( new Vector(evaluationStartTimeForEnergy, 1,evaluationEndTimeForEnergy).get() );
+      return allData.getSubMatrix(rowsOfElectricEnergy, columnsOfElectricEnergy).get();
+    }
+
     /**
      * 一日のトータル消費電力量を算出する<br>
      * @return 全日消費電力量[J]
      */
     public double calculateTotalElectricEnergy()
     {
-        Matrix allData = new Matrix(result);
-        int[] rowsOfElectricEnergy = Cast.doubleToInt( new Vector(evaluationStartTimeForEnergy, 1,evaluationEndTimeForEnergy).get() );
-        Matrix electricEnergyData = allData.getSubMatrix(rowsOfElectricEnergy, columnsOfElectricEnergy);
-        return electricEnergyData.sum();	//室外機の総消費電力量[J]
+        return new Matrix(getElectricEnergyData()).sum();	//室外機の総消費電力量[J]
     }
     /**
      * 一日のピーク消費電力量を算出する<br>
@@ -149,11 +161,28 @@ public class EnergyPlusObjectives {
      */
     public double calculatePeakElectricEnergy()
     {
-        Matrix allData = new Matrix(result);
-        int[] rowsOfElectricEnergy = Cast.doubleToInt( new Vector(evaluationStartTimeForEnergy, 1, evaluationEndTimeForEnergy).get() );
-        Matrix electricEnergyData = allData.getSubMatrix(rowsOfElectricEnergy, columnsOfElectricEnergy);    // 電力データすべてを抽出
-        Vector allEnergyData = electricEnergyData.sum(Matrix.DIRECTION_ROW); // 各時刻で全ての電力項目を足し合わせる
+        Vector allEnergyData = new Matrix(getElectricEnergyData()).sum(Matrix.DIRECTION_ROW); // 各時刻で全ての電力項目を足し合わせる
         return BuildingUtils.calculatePeakPower(allEnergyData, 1.0/timestepsPerHour);	// ピーク消費電力[kW]
+    }
+
+    /**
+     * 1カ月の基本料金を計算する
+     * @return 1カ月の基本料金
+     */
+    public double calculateBasicElectricityRate()
+    {
+      double peakPower = calculatePeakElectricEnergy();
+      return BuildingUtils.calculateBasicElectricityRate(peakPower, BASIC_POWER_RATE_UNIT, POWER_FACTOR);
+    }
+
+    /**
+     * 電力量から電気料金を計算する
+     * @return 電気料金
+     */
+    public double calculateElectricityRate()
+    {
+      double totalEnergy = BuildingUtils.J2kWh(calculateTotalElectricEnergy());
+      return BuildingUtils.calculateElectricityRate(totalEnergy, POWER_RATE_UNIT_SUMMER);
     }
 
     /**

@@ -7,14 +7,14 @@ import jp.ohtayo.commons.math.Vector;
 /**
  * ビルエネルギーや環境設定等のユーティリティクラスです．
  *
- * @author ohtayo <ohta.yoshihiro@outlook.jp>
+ * @author ohtayo (ohta.yoshihiro@outlook.jp)
  */
 public class BuildingUtils {
 
 	/**
 	 * JからkWhに変換します。<br>
 	 * J=W*s=W*h / 3600 = kW*h / 3600 / 1000 <br>
-	 * @param J
+	 * @param J Joule
 	 * @return kWh
 	 */
 	public static double J2kWh(double J)
@@ -24,7 +24,7 @@ public class BuildingUtils {
 
 	/**
 	 * kWhからJに変換します。<br>
-	 * @param kWh
+	 * @param kWh kilo Watt Hour
 	 * @return J
 	 */
 	public static double kWh2J(double kWh)
@@ -53,7 +53,7 @@ public class BuildingUtils {
 
 	/**
 	 * 電力量データからピーク電力を算出します。<br>
-	 * J->kWhがsamplingPreiodの電力量なので，<br>
+	 * J-\gt;kWhがsamplingPreiodの電力量なので，<br>
 	 * @param electricEnergy 消費電力量[J]の配列
 	 * @param samplingPeriod サンプリング周期[hour]
 	 * @return ピーク電力値[kW]
@@ -74,6 +74,29 @@ public class BuildingUtils {
 
 	//Todo:
 	//public static double calculatePeakPowerWithin30min(Vector electricEnergy, double samplingPeriod)
+
+	/**
+	 * 1カ月の基本料金を計算します．(東京電力高圧・特別高圧業務用電力(500kW未満)の電気料金プラン)
+	 * @param peakPower 契約電力[kW]
+	 * @param peakUnit 基本料金単価
+	 * @param powerFactor 力率(0-1)
+	 * @return 1カ月の基本料金[円]
+	 */
+	public static double calculateBasicElectricityRate(double peakPower, double peakUnit, double powerFactor)
+	{
+		return peakPower * peakUnit * ( 185-(powerFactor*100) )/100;
+	}
+
+	/**
+	 * 電気料金を計算します
+	 * @param electricEnergy 消費電力量[kWh]
+	 * @param unit 電力単価
+	 * @return 電気料金
+	 */
+	public static double calculateElectricityRate(double electricEnergy, double unit)
+	{
+		return electricEnergy * unit;
+	}
 
 	/**
 	 * 温度および湿度データからPMVを算出します。<br>
@@ -99,6 +122,9 @@ public class BuildingUtils {
 	/**
 	 * 複数ゾーンの温湿度データから各ゾーンのPMVを算出します<br>
 	 * @param data 温湿度データ(ゾーン1温度、ゾーン1湿度、ゾーン2温度…の順に列が並ぶデータ)
+	 * @param Va 風速[m/s]
+	 * @param Icl 着衣量[clo]
+	 * @param M 代謝量[W/m^2]
 	 * @return 各ゾーンのPMV配列(ゾーン1PMV、ゾーン2PMV…の順に列が並ぶ並ぶデータ)
 	 */
 	public static Matrix calculateZonePMV(Matrix data, double Va, double Icl, double M)

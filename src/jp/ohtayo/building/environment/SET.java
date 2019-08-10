@@ -10,7 +10,7 @@ import jp.ohtayo.commons.util.Cast;
  * 参照：ANSI/ASHRAE Standard 55-2013
  * Thermal Environmental Conditions for Human Occupancy
  *
- * @author ohtayo <ohta.yoshihiro@outlook.jp>
+ * @author ohtayo (ohta.yoshihiro@outlook.jp)
  */
 public class SET {
 

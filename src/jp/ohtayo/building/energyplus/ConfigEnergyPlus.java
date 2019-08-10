@@ -5,7 +5,7 @@ import jp.ohtayo.commons.io.ConfigBase;
 /**
  * EnergyPlusの実行に必要なコンフィグ設定をXMLで外部に保存・読込するクラスです。<br>
  *
- * @author ohtayo <ohta.yoshihiro@outlook.jp>
+ * @author ohtayo (ohta.yoshihiro@outlook.jp)
  */
 public class ConfigEnergyPlus extends ConfigBase {
 

@@ -20,7 +20,7 @@ import org.apache.commons.io.FilenameUtils;
 /**
  * Control class for EnergyPlus building energy simulator.
  *
- * @author ohtayo <ohta.yoshihiro@outlook.jp>
+ * @author ohtayo (ohta.yoshihiro@outlook.jp)
  */
 public class ControlEnergyPlus {
 
@@ -37,7 +37,7 @@ public class ControlEnergyPlus {
 
 	/**
 	 * constructor.
-	 * @param configFileName
+	 * @param configFileName name of ConfigEnergyPlus configuration file
 	 */
 	public ControlEnergyPlus(String configFileName)
 	{
@@ -104,6 +104,10 @@ public class ControlEnergyPlus {
 	/**
 	 * 温度配列からidfファイルの設定温度を変更して、EnergyPlusで消費電力・空調能力・温湿度を計算します<br>
 	 * @param settemp 設定温度[℃]の配列
+	 * @param startDay シミュレーション開始日
+	 * @param endDay シミュレーション終了日
+	 * @param idfDateOffset IDFファイルのうち日付指定箇所の行番号
+	 * @param idfTemperatureOffset IDFファイルのうち温度指定箇所の行番号
 	 * @return EnergyPlusの算出した全データ
 	 */
 	public double[][] simulate(double[] settemp, Calendar startDay, Calendar endDay, int idfDateOffset, int idfTemperatureOffset)

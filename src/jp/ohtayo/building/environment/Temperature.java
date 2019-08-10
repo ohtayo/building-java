@@ -3,7 +3,7 @@ package jp.ohtayo.building.environment;
 /**
  * 摂氏温度(Celsius)と華氏温度(Fahrenheit)の変換をするクラスです。
  *
- * @author ohtayo <ohta.yoshihiro@outlook.jp>
+ * @author ohtayo (ohta.yoshihiro@outlook.jp)
  */
 public class Temperature {
 	

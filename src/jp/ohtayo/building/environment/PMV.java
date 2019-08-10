@@ -11,7 +11,7 @@ import java.lang.Math;
  * また、あるPMV値の時の不満足者率を示すPPD(Predicted Percentage of Dissatisfied)を計算するメソッドを提供します。<br>
  * PMV,PPDの詳細についてはFanger教授の論文を参照してください。<br>
  *
- * @author ohtayo <ohta.yoshihiro@outlook.jp>
+ * @author ohtayo (ohta.yoshihiro@outlook.jp)
 */
 public class PMV {
 	
@@ -70,7 +70,6 @@ public class PMV {
 	 * @param Icl 着衣量[clo]
 	 * @param M 代謝量[met]
 	 * @param W 外部仕事[W/m^2]
-	 * @return PMV値(double型) エラーの場合NaNを返します。
 	 */
 	public void calculate(double Ta,double Rh,double Va,double Tr,double Icl,double M,double W)
 	{
