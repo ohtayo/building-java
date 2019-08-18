@@ -59,8 +59,8 @@ public class ControlEnergyPlus {
 		// 読込結果の格納
 		exeFolder = config.exeFolder;
 		idfBaseFolder = config.idfBaseFolder;
-    String threadName = Thread.currentThread().getName();
-    idfFolder = idfBaseFolder + threadName+"\\";
+		String threadName = Thread.currentThread().getName();
+		idfFolder = idfBaseFolder + threadName+"\\";
 		idfFile = config.idfFile;
 		weatherFile = config.weatherFile;
 		weatherFolder = exeFolder+"WeatherData\\";
