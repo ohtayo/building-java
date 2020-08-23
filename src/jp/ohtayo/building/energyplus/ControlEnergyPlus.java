@@ -303,4 +303,42 @@ public class ControlEnergyPlus {
 		new Text(epw).write(epwFile);
 	}
 
+	/**
+	 * epwファイルのある1日の外気温を別の1日の外気温に書き換える<br>
+	 * 本関数の呼び出し前にepwファイルをバックアップしておくこと<br>
+	 * @param base 書き換え先の気温のある日
+	 * @param data 書き換えデータ
+	 */
+	public void rewriteEPWFileFromCsv( Calendar base, double[] data) {
+		String epwFile = weatherFolder+weatherFile;
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
+
+		//シミュレーション年月日を指定
+		int year = 2006;
+		//書き換え行数を指定
+		int hourOfDay = 25;
+
+		// epwを読み込み
+		String[] epw = new Text().read(epwFile).getStringArray();
+
+		// 時刻から書き換え行を算出
+		Calendar cal11 = Calendar.getInstance();
+		cal11.set(year, 1, 1, 1, 0);	//2006年1月1日1時0分に時刻をセット
+		int idxBase = (int)((base.getTimeInMillis() - cal11.getTimeInMillis()) / (1000 * 60 * 60))+(9-1);	//現在時刻と1/1の時間差とヘッダ行数
+
+		// データの書き換え
+		for(int l=0; l<hourOfDay; l++) {
+			//元データの読み込み
+			String[] lineBase = epw[idxBase+l].split(",",-1);
+			lineBase[6] = String.valueOf(data[l]);	// 6列目が外気温
+			String line = "";
+			for(int i=0; i<lineBase.length-1; i++) {
+				line += lineBase[i] + ",";
+			}
+			line+=lineBase[lineBase.length-1];	//最後の1つのデータの後は","は不要
+			epw[idxBase+l] = line;
+		}
+		// epwの書き込み
+		new Text(epw).write(epwFile);
+	}
 }
