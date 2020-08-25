@@ -29,8 +29,8 @@ public class ControlEnergyPlus {
 	private final static String exeFile = "energyplus.exe";
 	private String weatherFolder;
 	private String weatherFile;
-  private String idfFolder;
-  private String idfBaseFolder;
+	private String idfFolder;
+  	private String idfBaseFolder;
 	private String idfFile;
 	private String sqliteFile;
 	private String csvFile;
@@ -172,8 +172,8 @@ public class ControlEnergyPlus {
 		Vector pmv2 = csvData.getColumns(pmv2index).mean("row");
 		Vector pmv3 = csvData.getColumns(pmv3index).mean("row");
 
-		int[] energyIndex = {csvData.columnLength()-1, csvData.columnLength()-2};	//消費電力，空調能力
-		int[] outdoorIndex = {0, 1, 2};	//時刻，設定温度，外気温，外気湿度
+		int[] energyIndex = Cast.doubleToInt(Csv.read(idfFolder + "powerindex_ep.csv")[0]);
+		int[] outdoorIndex = {0, 1, 2};	//時刻，外気温，外気湿度
 		Matrix energy = csvData.getColumns(energyIndex);
 		Matrix outdoor = csvData.getColumns(outdoorIndex);
 
@@ -190,8 +190,8 @@ public class ControlEnergyPlus {
 		//outdoor.setColumn(0, outdoor.getColumn(0).plus( ((2006-1970)*365+9)*24*60*60 ));	//36年と8日分足す
 
 		Matrix alldata = new Matrix(csvData.length(), 15);
-		alldata.setSubMatrix(0, csvData.length(), 0, outdoor.columnLength(), outdoor);	//時刻，設定温度，外気温，外気湿度
-		alldata.setColumn(3, settempdata);
+		alldata.setSubMatrix(0, csvData.length(), 0, outdoor.columnLength(), outdoor);	//時刻，外気温，外気湿度
+		alldata.setColumn(3, settempdata);	// 設定温度
 		alldata.setColumn(4, temp1);
 		alldata.setColumn(5, humi1);
 		alldata.setColumn(6, temp2);
