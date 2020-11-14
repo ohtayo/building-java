@@ -14,7 +14,7 @@ public class BuildingSample
   {
     Vector variable = new Vector(20, 0.1);
     boolean usingDifference = true;
-    EnergyPlusObjectives objectives = new EnergyPlusObjectives(variable.get(), usingDifference);
+    EnergyPlusObjectives objectives = new EnergyPlusObjectives(variable.get()).calculate(usingDifference);
     double power = objectives.calculateTotalElectricEnergy();
     double peak = objectives.calculatePeakElectricEnergy();
     double pmv = objectives.calculateAveragePMV();

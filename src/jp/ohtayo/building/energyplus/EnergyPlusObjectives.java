@@ -22,12 +22,14 @@ public class EnergyPlusObjectives {
     // definition for IDF file
     private int idfDateOffset = 154 -1;			//idfファイルの最初の日付の行数-1
     private int idfTemperatureOffset = 429 -1;	//idfファイルの最初の温度の行数-1
+    // Todo idfOffsetをxmlに含める( or そもそも指定しなくともidfを読み取って判断できるようにする．)
+
     private int evaluationMonth = 8;
     private int evaluationDay = 21;
 
     // definition for result file
     //PMVの抽出：35行目から103行が6:00-23:00のデータ、5-6列目にゾーン1, 2のPMV
-    private int hoursInOneDay = 24;
+    private static final int HOURS_IN_ONE_DAY = 24;
     private int timestepsPerHour = 6;
     private int evaluationStartTimeForComfortLevel = 7*timestepsPerHour-1;	//7:00
     private int evaluationEndTimeForComfortLevel = 21*timestepsPerHour-1;	//21:00
@@ -48,19 +50,21 @@ public class EnergyPlusObjectives {
     private int[] columnsOfElectricEnergy = {13};
     private int[] columnsOfTemperatureSetting = {3};
 
-    private int numberOfVariables = 19;    // 6:00～24:00を1時間毎に変更する．変数長は20
-    private int VARIABLE_LENGTH_MAX = 25;    // 0:00～24:00を1時間毎に変更する．変数長最大値
+    private int numberOfVariables = 19;    // 6:00～24:00を1時間毎に変更する．変数長は19
+    private int VARIABLE_LENGTH_MAX = HOURS_IN_ONE_DAY + 1;    // 0:00～24:00を1時間毎に変更する．変数長最大値
     private final static double SETPOINT_TEMPERATURE_MIN = 18.0;
     private final static double SETPOINT_TEMPERATURE_MAX = 30.0;
 
-    private final static double BASIC_POWER_RATE_UNIT = 1684.8;
-    private final static double POWER_RATE_UNIT_SUMMER = 17.22;
-    private final static double POWER_FACTOR = 0.9;
+    private double basicPowerRateUnit = 1684.8;
+    private double powerRateUnit = 17.22;
+    private double powerFactor = 0.9;
 
-    // Todo: variableのインスタンス化と保持
     private Matrix result;
+    private double[] variable;
 
     public double[][] get(){ return result.get();  }
+    public double[] getVariable(){ return variable; }
+
 
     /**
      * constructor.
@@ -68,7 +72,7 @@ public class EnergyPlusObjectives {
      */
     public EnergyPlusObjectives(Matrix data)
     {
-        result = new Matrix(data);
+        this.result = new Matrix(data);
     }
 
     /**
@@ -77,38 +81,108 @@ public class EnergyPlusObjectives {
      */
     public EnergyPlusObjectives(double[] variable)
     {
-        executeEnergyPlusSimulation(variable, true);
+        this.variable = variable;
     }
+
     /**
-     * constructor.
-     * @param variable 変数
-     * @param xmlFile xmlのファイル名
+     * IDFの変更行数を指定します．
+     * @param idfDateOffset IDFの日付の行
+     * @param idfTemperatureOffset IDFの設定温度の行
      */
-    public EnergyPlusObjectives(double[] variable, String xmlFile)
+    public EnergyPlusObjectives setIdfOffsets(int idfDateOffset, int idfTemperatureOffset)
     {
-        energyPlusConfigFile = xmlFile;
-        executeEnergyPlusSimulation(variable, true);
+        this.idfDateOffset = idfDateOffset;
+        this.idfTemperatureOffset = idfTemperatureOffset;
+        return this;
     }
+
     /**
-     * constructor.
-     * @param variable 変数
-     * @param usingDifference 設計変数を設定温度に変換するときに差分とするか
+     * 評価日を指定します．
+     * @param month 評価日の月
+     * @param day 評価日
      */
-    public EnergyPlusObjectives(double[] variable, boolean usingDifference)
+    public EnergyPlusObjectives setEvaluationDate(int month, int day)
     {
-        executeEnergyPlusSimulation(variable, usingDifference);
+        evaluationMonth = month;
+        evaluationDay = day;
+        return this;
     }
+
     /**
-     * constructor.
-     * @param variable 変数
-     * @param usingDifference 設計変数を設定温度に変換するときに差分とするか
+     * 快適性の評価開始時刻と終了時刻を指定します．
+     * @param start 開始時間
+     * @param end 終了時間
+     */
+    public EnergyPlusObjectives setEvaluationTimeForComfortLevel(int start, int end)
+    {
+        if(start==0) {
+            this.evaluationStartTimeForComfortLevel = 0;
+        }else{
+            this.evaluationStartTimeForComfortLevel = start*timestepsPerHour-1;
+        }
+        this.evaluationEndTimeForComfortLevel = end*timestepsPerHour-1;
+        return this;
+    }
+
+    /**
+     * 消費エネルギーの評価開始時刻と終了時刻を指定します．
+     * @param start 開始時間
+     * @param end 終了時間
+     */
+    public EnergyPlusObjectives setEvaluationStartTimeForEnergy(int start, int end)
+    {
+        if(start==0) {
+            this.evaluationStartTimeForEnergy = 0;
+        }else {
+            this.evaluationStartTimeForEnergy = start * timestepsPerHour - 1;
+        }
+        this.evaluationEndTimeForEnergy = end*timestepsPerHour-1;
+        return this;
+    }
+
+    /**
+     * EnergyPlus実行のConfigファイルを指定します．
      * @param xmlFile ConfigEnergyPlusのconfigファイル名
      */
-    public EnergyPlusObjectives(double[] variable, boolean usingDifference, String xmlFile)
+    public EnergyPlusObjectives setXmlFile(String xmlFile)
     {
         energyPlusConfigFile = xmlFile;
-        executeEnergyPlusSimulation(variable, usingDifference);
+        return this;
     }
+
+    /**
+     * 電気料金を設定します．
+     * @param basicPowerRate 基本料金[円/kW]
+     * @param powerRate 電気料金単価[円/kWh]
+     * @param powerFactor 力率[-]
+     */
+    public EnergyPlusObjectives setPowerRate(double basicPowerRate, double powerRate, double powerFactor)
+    {
+        this.basicPowerRateUnit = basicPowerRate;
+        this.powerRateUnit = powerRate;
+        this.powerFactor = powerFactor;
+        return this;
+    }
+
+    /**
+     * 目的関数を計算します<br>
+     */
+    public EnergyPlusObjectives calculate()
+    {
+        executeEnergyPlusSimulation(variable, true);
+        return this;
+    }
+
+    /**
+     * 目的関数を計算します<br>
+     * @param usingDifference 設計変数を設定温度に変換するときに差分とするか
+     */
+    public EnergyPlusObjectives calculate(boolean usingDifference)
+    {
+        executeEnergyPlusSimulation(variable, usingDifference);
+        return this;
+    }
+
     /**
      * 目的関数を計算します<br>
      * @param variable 変数
@@ -123,9 +197,9 @@ public class EnergyPlusObjectives {
         double initialValue = 25.0;
         double[] temperature;
         if(usingDifference)
-            temperature = variableToTemperatureSettingUsingDifference(variable, initialValue,25-numberOfVariables, hoursInOneDay+1);
+            temperature = variableToTemperatureSettingUsingDifference(variable, initialValue,VARIABLE_LENGTH_MAX-numberOfVariables, HOURS_IN_ONE_DAY+1);
         else
-            temperature = variableToTemperatureSettingUsingEachValue(variable, initialValue,25-numberOfVariables, hoursInOneDay+1);
+            temperature = variableToTemperatureSettingUsingEachValue(variable, initialValue,VARIABLE_LENGTH_MAX-numberOfVariables, HOURS_IN_ONE_DAY+1);
         System.out.println(temperature);
 
         //2. EnergyPlusの実行
@@ -172,7 +246,7 @@ public class EnergyPlusObjectives {
     public double calculateBasicElectricityRate()
     {
       double peakPower = calculatePeakElectricEnergy();
-      return BuildingUtils.calculateBasicElectricityRate(peakPower, BASIC_POWER_RATE_UNIT, POWER_FACTOR);
+      return BuildingUtils.calculateBasicElectricityRate(peakPower, basicPowerRateUnit, powerFactor);
     }
 
     /**
@@ -182,7 +256,7 @@ public class EnergyPlusObjectives {
     public double calculateElectricityRate()
     {
       double totalEnergy = BuildingUtils.J2kWh(calculateTotalElectricEnergy());
-      return BuildingUtils.calculateElectricityRate(totalEnergy, POWER_RATE_UNIT_SUMMER);
+      return BuildingUtils.calculateElectricityRate(totalEnergy, powerRateUnit);
     }
 
     /**
